@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
-	"net/http"
-
 	"media-jukebox-backend/internal/api"
+	"media-jukebox-backend/internal/mpv"
 	"media-jukebox-backend/internal/queue"
 	"media-jukebox-backend/internal/session"
 	"media-jukebox-backend/internal/ws"
+	"net/http"
 )
 
 func main() {
@@ -15,10 +15,16 @@ func main() {
 	s := session.New()
 	hub := ws.New()
 
+	player, err := mpv.New("/tmp/mpv.sock")
+	if err != nil {
+		panic(err)
+	}
+
 	apiHandler := &api.API{
 		Queue:   q,
 		Session: s,
 		Hub:     hub,
+		Player:  player,
 	}
 
 	hub.OnMessage = func(msg ws.ClientMessage) {
@@ -36,6 +42,9 @@ func main() {
 
 	http.HandleFunc("/control/play", logging(apiHandler.Play))
 	http.HandleFunc("/control/pause", logging(apiHandler.Pause))
+	http.HandleFunc("/control/resume", logging(apiHandler.Resume))
+	http.HandleFunc("/control/next", logging(apiHandler.Next))
+	http.HandleFunc("/control/prev", logging(apiHandler.Prev))
 
 	http.HandleFunc("/session", logging(apiHandler.GetSession))
 

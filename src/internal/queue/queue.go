@@ -1,9 +1,8 @@
 package queue
 
 import (
-	"sync"
-
 	"media-jukebox-backend/internal/model"
+	"sync"
 )
 
 type Queue struct {
@@ -78,6 +77,25 @@ func (q *Queue) Next() *model.QueueItem {
 	}
 
 	q.idx++
+
+	item := q.items[q.idx]
+	return &item
+}
+
+func (q *Queue) Prev() *model.QueueItem {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	if len(q.items) == 0 {
+		return nil
+	}
+
+	if q.idx <= 0 {
+		q.idx = 0
+		return nil
+	}
+
+	q.idx--
 
 	item := q.items[q.idx]
 	return &item

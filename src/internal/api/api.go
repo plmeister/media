@@ -2,19 +2,20 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
-	"time"
-
 	"media-jukebox-backend/internal/model"
+	"media-jukebox-backend/internal/mpv"
 	"media-jukebox-backend/internal/queue"
 	"media-jukebox-backend/internal/session"
 	"media-jukebox-backend/internal/ws"
+	"net/http"
+	"time"
 )
 
 type API struct {
 	Queue   *queue.Queue
 	Session *session.Manager
 	Hub     *ws.Hub
+	Player  *mpv.Player
 }
 
 type AddRequest struct {
@@ -88,6 +89,9 @@ func (a *API) Play(w http.ResponseWriter, r *http.Request) {
 		"type": "play",
 		"item": item,
 	})
+
+	_ = a.Player.LoadFile(item.URL)
+	_ = a.Player.Pause(false)
 }
 
 func (a *API) Pause(w http.ResponseWriter, r *http.Request) {
@@ -97,10 +101,27 @@ func (a *API) Pause(w http.ResponseWriter, r *http.Request) {
 	a.Hub.Broadcast(map[string]any{
 		"type": "pause",
 	})
+
+	_ = a.Player.Pause(true)
+}
+
+func (a *API) Resume(w http.ResponseWriter, r *http.Request) {
+	a.Session.Pause()
+	a.broadcastSession()
+
+	a.Hub.Broadcast(map[string]any{
+		"type": "pause",
+	})
+
+	_ = a.Player.Pause(false)
 }
 
 func (a *API) Next(w http.ResponseWriter, r *http.Request) {
-	a.advance()
+	a.advance(a.Queue.Next())
+}
+
+func (a *API) Prev(w http.ResponseWriter, r *http.Request) {
+	a.advance(a.Queue.Prev())
 }
 
 func (a *API) HandleEnded(itemID string) {
@@ -114,12 +135,10 @@ func (a *API) HandleEnded(itemID string) {
 		return
 	}
 
-	a.advance()
+	a.advance(a.Queue.Next())
 }
 
-func (a *API) advance() {
-	item := a.Queue.Next()
-
+func (a *API) advance(item *model.QueueItem) {
 	if item == nil {
 		a.Session.Idle()
 		a.broadcastSession()
