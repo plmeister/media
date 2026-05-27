@@ -2,9 +2,14 @@
   import { onMount } from "svelte";
   import { writable } from "svelte/store";
   import { getState, post } from "$lib/api";
-
+  import AddToQueue from "$lib/components/AddToQueue.svelte";
   type QueueItem = {
     title: string;
+  };
+
+  type AddItem = {
+    type: string;
+    source: string;
   };
 
   type PlayerState = {
@@ -55,7 +60,6 @@
 </div>
 
 <div>
-  {JSON.stringify($playerState)}
   {$playerState.playing ? "playing" : "not playing"}
 </div>
 
@@ -64,6 +68,7 @@
 <button onclick={() => post("/control/pause")}> Pause </button>
 
 <button onclick={() => post("/control/resume")}> Resume </button>
+<button onclick={() => post("/control/prev")}> Prev </button>
 <button onclick={() => post("/control/next")}> Next </button>
 
 <h2>Queue</h2>
@@ -73,3 +78,5 @@
     <li>{item.title}</li>
   {/each}
 </ul>
+
+<AddToQueue />

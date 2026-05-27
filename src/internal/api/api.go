@@ -22,6 +22,7 @@ type API struct {
 }
 
 type AddRequest struct {
+	Type  string `json:"type"`
 	URL   string `json:"url"`
 	Title string `json:"title"`
 }
@@ -80,8 +81,10 @@ func (a *API) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("add %s:%s to queue", req.Type, req.URL)
 	item := model.QueueItem{
 		ID:     generateID(),
+		Type:   req.Type,
 		Title:  req.Title,
 		Source: req.URL,
 	}
@@ -92,6 +95,7 @@ func (a *API) Add(w http.ResponseWriter, r *http.Request) {
 
 	a.Queue.Add(item)
 	a.broadcastQueue()
+	a.BroadcastState()
 
 	w.WriteHeader(http.StatusCreated)
 }

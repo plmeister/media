@@ -74,7 +74,7 @@ func (q *Queue) Next() *model.QueueItem {
 	}
 
 	if q.idx+1 >= len(q.items) {
-		q.idx = len(q.items)
+		q.idx = len(q.items) - 1
 		return nil
 	}
 
