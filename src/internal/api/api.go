@@ -81,13 +81,13 @@ func (a *API) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item := model.QueueItem{
-		ID:    generateID(),
-		Title: req.Title,
-		URL:   req.URL,
+		ID:     generateID(),
+		Title:  req.Title,
+		Source: req.URL,
 	}
 
 	if item.Title == "" {
-		item.Title = item.URL
+		item.Title = item.Source
 	}
 
 	a.Queue.Add(item)
@@ -125,7 +125,7 @@ func (a *API) Play(w http.ResponseWriter, r *http.Request) {
 		"item": item,
 	})
 
-	_ = a.Player.LoadFile(item.URL)
+	_ = a.Player.LoadFile(item.Source)
 	_ = a.Player.Pause(false)
 
 	a.BroadcastState()
