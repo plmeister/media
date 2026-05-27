@@ -1,3 +1,4 @@
+/* Package model contains structs and types needed by other parts of the code */
 package model
 
 type QueueItem struct {
@@ -12,9 +13,9 @@ type Session struct {
 }
 
 type WSMessage struct {
-	Type  string     `json:"type"`
-	Item  *QueueItem `json:"item,omitempty"`
+	Type  string      `json:"type"`
+	Item  *QueueItem  `json:"item,omitempty"`
 	Items []QueueItem `json:"items,omitempty"`
-	URL   string     `json:"url,omitempty"`
-	State string     `json:"state,omitempty"`
+	URL   string      `json:"url,omitempty"`
+	State string      `json:"state,omitempty"`
 }

@@ -2,12 +2,13 @@ package main
 
 import (
 	"log"
-	"media-jukebox-backend/internal/api"
-	"media-jukebox-backend/internal/mpv"
-	"media-jukebox-backend/internal/queue"
-	"media-jukebox-backend/internal/session"
-	"media-jukebox-backend/internal/ws"
 	"net/http"
+
+	"media/internal/api"
+	"media/internal/mpv"
+	"media/internal/queue"
+	"media/internal/session"
+	"media/internal/ws"
 )
 
 func main() {
@@ -34,10 +35,19 @@ func main() {
 		}
 	}
 
+	go func() {
+		for {
+			e := <-player.Events()
+			log.Printf("%s: %s", e.Name, e.Data)
+
+		}
+	}()
+
 	http.HandleFunc("/ws", logging(hub.HandleWS))
 
+	http.HandleFunc("/state", logging(apiHandler.State))
 	http.HandleFunc("/queue/add", logging(apiHandler.Add))
-	http.HandleFunc("/queue/next", logging(apiHandler.Next))
+	http.HandleFunc("/queue/clear", logging(apiHandler.Clear))
 	http.HandleFunc("/queue", logging(apiHandler.GetQueue))
 
 	http.HandleFunc("/control/play", logging(apiHandler.Play))

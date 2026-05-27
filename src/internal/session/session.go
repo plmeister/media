@@ -1,9 +1,9 @@
+/* Package session */
 package session
 
 import (
+	"media/internal/model"
 	"sync"
-
-	"media-jukebox-backend/internal/model"
 )
 
 type Manager struct {

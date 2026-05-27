@@ -1,4 +1,4 @@
-module media-jukebox-backend
+module media
 
 go 1.22
 

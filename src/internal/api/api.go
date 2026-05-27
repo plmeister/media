@@ -1,14 +1,17 @@
+/* Package api */
 package api
 
 import (
 	"encoding/json"
-	"media-jukebox-backend/internal/model"
-	"media-jukebox-backend/internal/mpv"
-	"media-jukebox-backend/internal/queue"
-	"media-jukebox-backend/internal/session"
-	"media-jukebox-backend/internal/ws"
+	"log"
 	"net/http"
 	"time"
+
+	"media/internal/model"
+	"media/internal/mpv"
+	"media/internal/queue"
+	"media/internal/session"
+	"media/internal/ws"
 )
 
 type API struct {
@@ -23,8 +26,29 @@ type AddRequest struct {
 	Title string `json:"title"`
 }
 
+type PlayerState struct {
+	Playing bool              `json:"playing"`
+	Current *model.QueueItem  `json:"current"`
+	Queue   []model.QueueItem `json:"queue"`
+}
+
 func generateID() string {
 	return time.Now().Format("20060102150405.000000")
+}
+
+func (a *API) GetState() PlayerState {
+	return PlayerState{
+		Playing: a.Player.Playing,
+		Current: a.Queue.Current(),
+		Queue:   a.Queue.Items(),
+	}
+}
+
+func (a *API) BroadcastState() {
+	a.Hub.Broadcast(map[string]any{
+		"type": "state",
+		"data": a.GetState(),
+	})
 }
 
 func (a *API) broadcastQueue() {
@@ -39,6 +63,12 @@ func (a *API) broadcastSession() {
 		"type":    "session",
 		"session": a.Session.Get(),
 	})
+}
+
+func (a *API) State(w http.ResponseWriter, r *http.Request) {
+	if err := json.NewEncoder(w).Encode(a.GetState()); err != nil {
+		_, _ = w.Write([]byte("error"))
+	}
 }
 
 func (a *API) Add(w http.ResponseWriter, r *http.Request) {
@@ -67,17 +97,22 @@ func (a *API) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) GetQueue(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(a.Queue.Items())
+	if err := json.NewEncoder(w).Encode(a.Queue.Items()); err != nil {
+		_, _ = w.Write([]byte("error"))
+	}
 }
 
 func (a *API) GetSession(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(a.Session.Get())
+	if err := json.NewEncoder(w).Encode(a.Session.Get()); err != nil {
+		_, _ = w.Write([]byte("error"))
+	}
 }
 
 func (a *API) Play(w http.ResponseWriter, r *http.Request) {
 	item := a.Queue.Start()
 
 	if item == nil {
+		log.Printf("no item to play")
 		http.Error(w, "queue empty", http.StatusBadRequest)
 		return
 	}
@@ -92,28 +127,26 @@ func (a *API) Play(w http.ResponseWriter, r *http.Request) {
 
 	_ = a.Player.LoadFile(item.URL)
 	_ = a.Player.Pause(false)
+
+	a.BroadcastState()
 }
 
 func (a *API) Pause(w http.ResponseWriter, r *http.Request) {
 	a.Session.Pause()
 	a.broadcastSession()
 
-	a.Hub.Broadcast(map[string]any{
-		"type": "pause",
-	})
-
 	_ = a.Player.Pause(true)
+	log.Printf("set pause to true")
+	a.BroadcastState()
 }
 
 func (a *API) Resume(w http.ResponseWriter, r *http.Request) {
 	a.Session.Pause()
 	a.broadcastSession()
 
-	a.Hub.Broadcast(map[string]any{
-		"type": "pause",
-	})
-
 	_ = a.Player.Pause(false)
+	log.Printf("set pause to false")
+	a.BroadcastState()
 }
 
 func (a *API) Next(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +169,7 @@ func (a *API) HandleEnded(itemID string) {
 	}
 
 	a.advance(a.Queue.Next())
+	a.BroadcastState()
 }
 
 func (a *API) advance(item *model.QueueItem) {
@@ -153,8 +187,11 @@ func (a *API) advance(item *model.QueueItem) {
 	a.Session.SetPlaying(item.ID)
 	a.broadcastSession()
 
-	a.Hub.Broadcast(map[string]any{
-		"type": "play",
-		"item": item,
-	})
+	a.BroadcastState()
+}
+
+func (a *API) Clear(w http.ResponseWriter, r *http.Request) {
+	_ = a.Queue.Clear()
+	a.broadcastQueue()
+	a.BroadcastState()
 }

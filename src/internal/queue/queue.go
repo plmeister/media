@@ -1,8 +1,10 @@
+/* Package queue manages the playlist */
 package queue
 
 import (
-	"media-jukebox-backend/internal/model"
 	"sync"
+
+	"media/internal/model"
 )
 
 type Queue struct {
@@ -99,4 +101,14 @@ func (q *Queue) Prev() *model.QueueItem {
 
 	item := q.items[q.idx]
 	return &item
+}
+
+func (q *Queue) Clear() error {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	q.idx = 0
+	q.items = []model.QueueItem{}
+
+	return nil
 }

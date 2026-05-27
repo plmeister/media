@@ -1,3 +1,4 @@
+/* Package ws contains the implementation of the websocket hub */
 package ws
 
 import (
@@ -49,7 +50,7 @@ func (h *Hub) readLoop(conn *websocket.Conn) {
 		h.mu.Lock()
 		delete(h.clients, conn)
 		h.mu.Unlock()
-		conn.Close()
+		_ = conn.Close()
 	}()
 
 	for {
@@ -78,7 +79,7 @@ func (h *Hub) Broadcast(v any) {
 	for conn := range h.clients {
 		err := conn.WriteMessage(websocket.TextMessage, payload)
 		if err != nil {
-			conn.Close()
+			_ = conn.Close()
 			delete(h.clients, conn)
 		}
 	}

@@ -1,3 +1,6 @@
+/* Package mpv contains code for communicating with
+* a running instance of mpv over a unix socket
+ */
 package mpv
 
 import (
@@ -40,6 +43,7 @@ type Player struct {
 	reqID   atomic.Uint64
 	closeCh chan struct{}
 	closed  atomic.Bool
+	Playing bool
 }
 
 func New(socketpath string) (*Player, error) {
@@ -53,6 +57,7 @@ func New(socketpath string) (*Player, error) {
 		writeCh: make(chan request, 128),
 		events:  make(chan Event, 128),
 		closeCh: make(chan struct{}),
+		Playing: false,
 	}
 
 	go p.writerLoop()
@@ -172,6 +177,7 @@ func (p *Player) Pause(state bool) error {
 	cmd := "set_property"
 	args := []any{"pause", state}
 	_, err := p.Send(cmd, args...)
+	p.Playing = !state
 	return err
 }
 
