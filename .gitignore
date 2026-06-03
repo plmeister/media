@@ -1,3 +1,8 @@
 /src/tmp
 /dist
 /src/internal/ui/build
+/apphost/bin/Debug/net8.0
+/apphost/obj
+/backend/device.json
+/backend/internal/ui/build
+/backend/tmp
