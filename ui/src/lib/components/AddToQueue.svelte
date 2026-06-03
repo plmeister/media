@@ -1,23 +1,23 @@
 <script lang="ts">
   import { postContent } from "$lib/api";
+  import type { Device } from "$lib/device";
 
-  type SourceType = "youtube" | "jellyfin";
+  type SourceType = "youtube" | "file" | "jellyfin";
 
-  let url = "";
-  let type: SourceType = "youtube";
-  let loading = false;
+  let url = $state<string>("");
+  let type = $state<SourceType>("youtube");
+  let loading = $state(false);
+  let { device }: { device: Device | null } = $props();
 
   async function add() {
+    if (!device) return;
     if (!url.trim()) return;
-
     loading = true;
-
     try {
-      await postContent("/queue/add", {
+      await postContent(device, "/queue/add", {
         type,
         url,
       });
-
       url = "";
     } finally {
       loading = false;
@@ -38,7 +38,9 @@
     onkeydown={(e) => e.key === "Enter" && add()}
   />
 
-  <button onclick={add} disabled={loading || !url.trim()}> Add </button>
+  <button onclick={add} disabled={!device || loading || !url.trim()}>
+    {loading ? "Adding.." : "Add"}
+  </button>
 </div>
 
 <style>
