@@ -14,5 +14,5 @@ export async function postContent(device: Device, path: string, data: object) {
 }
 
 export async function getState(device: Device) {
-  return fetch(`${device.baseUrl}/state`).then((r) => r.json());
+  return fetch(`${device.baseUrl}/api/state`).then((r) => r.json());
 }

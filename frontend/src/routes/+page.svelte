@@ -66,25 +66,23 @@
   });
 
   function play() {
-    if (device) post(device, "/control/play");
+    if (device) post(device, "/api/control/play");
   }
   function togglePause() {
     if (!$playerState) return;
     if ($playerState.playing) {
-      post(device, "/control/pause");
+      post(device, "/api/control/pause");
     } else {
-      post(device, "/control/resume");
+      post(device, "/api/control/resume");
     }
   }
   function prev() {
-    if (device) post(device, "/control/prev");
+    if (device) post(device, "/api/control/prev");
   }
   function next() {
-    if (device) post(device, "/control/next");
+    if (device) post(device, "/api/control/next");
   }
 </script>
-
-<h1 class="title">Media Server</h1>
 
 <div class="device">
   {device?.label ?? "no device"}

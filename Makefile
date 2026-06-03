@@ -4,8 +4,9 @@
 
 APP_NAME := media-jukebox
 BACKEND_BIN := ../dist/server
-UI_DIR := ui
-UI_DIST := ui/dist
+BACKEND_DIR := backend
+UI_DIR := frontend
+UI_DIST := frontend/dist
 GO_MAIN := ./cmd/server/
 
 DOCKER_COMPOSE := docker compose
@@ -62,7 +63,7 @@ build-ui:
 build-backend:
 	@echo "Building backend..."
 	mkdir -p dist
-	cd src && go build -o $(BACKEND_BIN) $(GO_MAIN)
+	cd $(BACKEND_DIR) && go build -o $(BACKEND_BIN) $(GO_MAIN)
 
 # =========================
 # Run locally

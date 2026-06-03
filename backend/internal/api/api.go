@@ -39,7 +39,7 @@ func generateID() string {
 
 func (a *API) GetState() PlayerState {
 	return PlayerState{
-		Playing: a.Player.Playing,
+		Playing: a.Player.IsPlaying(),
 		Current: a.Queue.Current(),
 		Queue:   a.Queue.Items(),
 	}
@@ -113,6 +113,7 @@ func (a *API) GetSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Play(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	item := a.Queue.Start()
 
 	if item == nil {
@@ -129,26 +130,28 @@ func (a *API) Play(w http.ResponseWriter, r *http.Request) {
 		"item": item,
 	})
 
-	_ = a.Player.LoadFile(item.Source)
-	_ = a.Player.Pause(false)
+	_ = a.Player.LoadFile(ctx, item.Source)
+	_ = a.Player.Pause(ctx, false)
 
 	a.BroadcastState()
 }
 
 func (a *API) Pause(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	a.Session.Pause()
 	a.broadcastSession()
 
-	_ = a.Player.Pause(true)
+	_ = a.Player.Pause(ctx, true)
 	log.Printf("set pause to true")
 	a.BroadcastState()
 }
 
 func (a *API) Resume(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	a.Session.Pause()
 	a.broadcastSession()
 
-	_ = a.Player.Pause(false)
+	_ = a.Player.Pause(ctx, false)
 	log.Printf("set pause to false")
 	a.BroadcastState()
 }

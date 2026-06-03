@@ -14,7 +14,7 @@
     if (!url.trim()) return;
     loading = true;
     try {
-      await postContent(device, "/queue/add", {
+      await postContent(device, "/api/queue/add", {
         type,
         url,
       });

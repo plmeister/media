@@ -8,7 +8,7 @@ let currentDevice: Device | null = null;
 
 async function probe(baseUrl: string): Promise<Device | null> {
   try {
-    const response = await fetch(`${baseUrl}/identity`);
+    const response = await fetch(`${baseUrl}/api/identity`);
 
     if (!response.ok) {
       return null;
@@ -25,5 +25,3 @@ async function probe(baseUrl: string): Promise<Device | null> {
     return null;
   }
 }
-
-
